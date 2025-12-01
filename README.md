@@ -63,7 +63,7 @@ void OnEnable()
     }
 ```
 
-Y he creado 2 métodos para manejar el acelerómetro y el giroscopio (moverConAcelerometro y rotarConGiroscopio).
+Y he creado 2 métodos para manejar el acelerómetro y la orientación (moverConAcelerometro y orientarAlNorte).
 
 ```csharp
 void MoverConAcelerometro()
@@ -89,32 +89,38 @@ void MoverConAcelerometro()
 Para el acelerómetro si lo detecta del dispositivo, obtenemos sus valores son ReadValue y usamos el eje y como el eje de inclinación y trasladamos el guerrero (hacía adelante o hacía atrás).
 
 ```csharp
-void RotarConGiroscopio()
+void OrientarAlNorte()
     {
-        if (GyroscopeInput.current != null)
+        if (MagneticFieldInput.current != null)
         {
-            Vector3 angularVel = GyroscopeInput.current.angularVelocity.ReadValue();
+            Vector3 magnetic = MagneticFieldInput.current.magneticField.ReadValue();
 
-            // Convertimos velocidad angular en rotación incremental
-            Quaternion deltaRotation = Quaternion.Euler(angularVel * Mathf.Rad2Deg * Time.deltaTime);
+            // Proyectamos en plano XZ para obtener dirección norte
+            Vector3 north = new Vector3(magnetic.x, 0, magnetic.z);
 
-            // Acumulamos rotación
-            currentRotation *= deltaRotation;
+            if (north.sqrMagnitude > 0.01f)
+            {
+                // Ajuste de orientación: Horizontal Izquierda
+                // Rotamos 90° alrededor de Y para que la izquierda vertical sea la parte inferior
+                Quaternion correction = Quaternion.Euler(0, -90, 0);
 
-            // Aplicamos suavizado
-            transform.rotation = Quaternion.Slerp(transform.rotation, currentRotation, Time.deltaTime * rotationSpeed);
+                Quaternion targetRotation = Quaternion.LookRotation(north.normalized, Vector3.up) * correction;
 
-            // Mostrar en UI
-            gyroText.text = "Gyro: " + angularVel.ToString("F2");
+                // Interpolación suave con Slerp
+                currentRotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
+                transform.rotation = currentRotation;
+            }
+
+            magneticText.text = "Magnetic: " + magnetic.ToString("F2");
         }
         else
         {
-            gyroText.text = "Gyro: No detectado";
+            magneticText.text = "Magnetic: No detectado";
         }
     }
 ```
 
-Con el giroscopio ocurre lo mimsmo, si se detecta leemos sus valores y convierto la velocidad angular (para eso utilizo un **Quaternion**) y acumulo la rotación para luego aplicarsela al guerrero.
+Con el magnetómetro ocurre lo mimsmo, si se detecta leemos sus valores y proyecto en el plano XZ para obtener la dirección al norte, luego ajusto la orientación utilizando **Quaternion** y roto el guerrero.
 
 ## Resultado
 
