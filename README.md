@@ -117,3 +117,7 @@ void RotarConGiroscopio()
 Con el giroscopio ocurre lo mimsmo, si se detecta leemos sus valores y convierto la velocidad angular (para eso utilizo un **Quaternion**) y acumulo la rotación para luego aplicarsela al guerrero.
 
 ## Resultado
+
+https://github.com/user-attachments/assets/a852816c-15f9-45b0-ae62-5fddea02684a
+
+
